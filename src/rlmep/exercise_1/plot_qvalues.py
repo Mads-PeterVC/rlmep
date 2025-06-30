@@ -1,9 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_qvalues(Q_table, env, fs=12, figsize=(6, 6)):
-    desc = env.unwrapped.desc if hasattr(env.unwrapped, 'desc') else None
-    fig, ax = plt.subplots(1, 1, figsize=figsize)
+def plot_qvalues(Q_table, env, fs=12, figsize=(6, 6), ax=None):
+
+    if env is not None:
+        desc = env.unwrapped.desc if hasattr(env.unwrapped, 'desc') else None
+    else:
+        desc = None
+    
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
 
     cmap = plt.get_cmap('Blues')
 

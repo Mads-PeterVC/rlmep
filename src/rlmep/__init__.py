@@ -1,4 +1,2 @@
-from rlmep.utils import plot_qvalues
-
-def main() -> None:
-    print("Hello from rlmep!")
+from rlmep.exercise_1 import plot_qvalues
+from rlmep.example_function import example_function
