@@ -18,7 +18,7 @@ class QPlotter:
         for i, x in enumerate(X):
             for j, y in enumerate(Y):
                 
-                if (i, j) == env._terminal_state:
+                if [i, j] == env._terminal_state:
                     continue
 
                 for action_index, method in enumerate(self.get_methods()):
