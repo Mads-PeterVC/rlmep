@@ -7,3 +7,13 @@
 | Exercise 2  | [exercise_2_mep_env.ipynb](https://github.com/Mads-PeterVC/rlmep/blob/main/exercises/exercise_2_mep_env.ipynb) | [ ![Open in Google Colab] ](https://colab.research.google.com/github/Mads-PeterVC/rlmep/blob/main/exercises/exercise_2_mep_env.ipynb#) |
 
 [Open in Google Colab]: https://colab.research.google.com/assets/colab-badge.svg
+
+## Local setup
+
+If you prefer to work elsewhere than Colab you can download the notebooks, create an environment and run 
+
+```
+pip install git+https://github.com/Mads-PeterVC/rlmep
+```
+
+To install all dependencies and the supporting code.
