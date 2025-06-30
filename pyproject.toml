@@ -17,7 +17,6 @@ dependencies = [
     "pygame>=2.6.1",
     "rich>=14.0.0",
     "ruff>=0.11.7",
-    "tensordict>=0.7.2",
     "torch>=2.6.0",
     "tqdm>=4.67.1",
 ]
