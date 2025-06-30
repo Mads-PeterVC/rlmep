@@ -15,11 +15,16 @@ dependencies = [
     "matplotlib==3.10.0",
     "numpy<2.1.0,>=1.22",
     "pygame>=2.6.1",
-    "rich>=14.0.0",
+    "rich<14,>=12.4.4",
     "ruff>=0.11.7",
     "torch>=2.6.0",
     "tqdm>=4.67.1",
 ]
+
+[project.optional-dependencies]
+colab = ["torch==2.6.0+cu124"]
+local = ["torch"]
+
 
 [project.scripts]
 rlmep = "rlmep:main"
