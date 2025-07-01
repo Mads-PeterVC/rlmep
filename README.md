@@ -13,7 +13,7 @@
 If you prefer to work elsewhere than Colab you can download the notebooks, create an environment and run 
 
 ```
-pip install git+https://github.com/Mads-PeterVC/rlmep
+pip install "rlmep[local] @ git+https://github.com/Mads-PeterVC/rlmep.git"
 ```
 
 To install all dependencies and the supporting code.
