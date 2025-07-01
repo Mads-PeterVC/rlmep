@@ -24,6 +24,8 @@ dependencies = [
 colab = ["torch==2.6.0+cu124"]
 local = ["torch"]
 
+[tool.setuptools.package-data]
+rlmep = ["*.traj"]
 
 [project.scripts]
 rlmep = "rlmep:main"
