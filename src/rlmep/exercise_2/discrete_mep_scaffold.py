@@ -334,7 +334,7 @@ class ScaffoldDiscreteMEP(gym.Env):
             )
 
 
-def _get_cheat_functions():
+def _get_cheat_functions() -> dict[str, Callable]:
     """
     Provide solution functions for the discrete MEP environment.
     """

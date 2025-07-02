@@ -70,6 +70,8 @@ class DQN:
         truncated = False
         return_value = 0
 
+        states = [state]
+
         while not terminal and not truncated:
             # Choose action
             action = self.get_action(
@@ -100,8 +102,9 @@ class DQN:
 
             # Update the state.
             state = next_state
+            states.append(state.copy())
 
-        return return_value
+        return return_value, states
     
     def train_network(self, gamma: float):
         # Get a batch of data from the replay buffer
