@@ -49,6 +49,7 @@ def get_initial_config(final_config, level=0) -> Atoms:
 def get_final_cluster() -> Atoms:
     path = Path(files("rlmep.data")) / "neb.traj"
     final_config = read(path, index=-1)
+    final_config.set_cell([25, 25, 25])
     final_config.center()
 
     # Swap the position of the 5th atom and the last atom

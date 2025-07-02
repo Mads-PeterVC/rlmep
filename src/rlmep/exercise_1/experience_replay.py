@@ -42,8 +42,3 @@ class ExperienceReplay:
         self.terminal = torch.tensor(np.zeros(self.size), dtype=torch.bool)
         self.current_size = 0
         self.index = 0
-
-def copy_weights(source_network, target_network):
-    """
-    """
-    source_network.load_state_dict(deepcopy(target_network.state_dict()))

@@ -1,13 +1,13 @@
+from typing import Callable
+
 import gymnasium as gym
-from ase import Atoms
-import numpy as np
 import matplotlib.pyplot as plt
-from rlmep.utils import plot_atoms, plot_cell
+import numpy as np
+from ase import Atoms
 from ase.calculators.calculator import Calculator
 
 from rlmep.exercise_2 import GridSpec
-
-from typing import Callable
+from rlmep.utils import plot_atoms, plot_cell
 
 
 class ScaffoldDiscreteMEP(gym.Env):
@@ -25,7 +25,8 @@ class ScaffoldDiscreteMEP(gym.Env):
         max_steps: int | None = None,
         reward_scale: float = 10.0,
         barrier_max: float = 2.0,
-        functions: dict[str, Callable] = None,
+        distance_parameter: float = 0.1,
+        functions: dict[str, Callable] = None,        
     ):
         """
         Parameters
@@ -52,6 +53,7 @@ class ScaffoldDiscreteMEP(gym.Env):
         self.max_steps = max_steps
         self.barrier_max = barrier_max
         self.reward_scale = reward_scale
+        self.distance_parameter = distance_parameter
 
         self._set_methods(functions)
 
@@ -68,7 +70,8 @@ class ScaffoldDiscreteMEP(gym.Env):
             "check_truncated",
             "update_state",
             "update_atoms",
-            "reward_function",
+            "get_final_reward",
+            "get_distance_reward",
         ]
 
         for func in required_functions:
@@ -80,8 +83,9 @@ class ScaffoldDiscreteMEP(gym.Env):
         self._update_state = functions.get("update_state")
         self._check_terminal = functions.get("check_terminal")
         self._check_truncated = functions.get("check_truncated")
-        self._reward_function = functions.get("reward_function")
         self._update_atoms = functions.get("update_atoms")
+        self._get_distance_reward = functions.get("get_distance_reward")
+        self._get_final_reward = functions.get("get_final_reward")
 
     def _set_initial_final_states(self, initial_config: Atoms, final_config: Atoms):
         """
@@ -151,15 +155,26 @@ class ScaffoldDiscreteMEP(gym.Env):
         """
         Calculates the reward based on the current state and history.
         """
+
         if self.check_terminal():
-            reward = self._reward_function(delta_energies=self.history, delta_max=self.barrier_max, A=self.reward_scale)
+            reward = self._get_final_reward(delta_energies=self.history, 
+                                           delta_max=self.barrier_max, 
+                                           A=self.reward_scale)
 
         elif self.check_truncated():
-            reward = 0.0
+            reward = 0
         else:
-            reward = 0.0
+            reward = 0
+        # Calculate the distance reward
+        current_distance = self.get_terminal_distance(self.state)
+        reward += self._get_distance_reward(current_distance, self.previous_distance, self.distance_parameter)
+        self.previous_distance = self.get_terminal_distance(self.state)
 
         return reward
+    
+    def get_terminal_distance(self, state: list[int, int]) -> float:
+        distance = np.abs((state[0] - self._terminal_state[0])) + np.abs((state[1] - self._terminal_state[1]))
+        return distance            
 
     def update_history(self):
         """
@@ -185,7 +200,7 @@ class ScaffoldDiscreteMEP(gym.Env):
         """
         Checks if the current state is the terminal state.
         """
-        terminal = self._check_terminal(self.state, self._terminal_state)
+        terminal = self._check_terminal(self.state, self._terminal_state, self.history, self.barrier_max)
 
         return terminal
 
@@ -233,6 +248,8 @@ class ScaffoldDiscreteMEP(gym.Env):
             )
         )
         self.history = [0]
+
+        self.previous_distance = self.get_terminal_distance(self.state)
 
         return self.state.copy(), {}
 
@@ -296,6 +313,8 @@ class ScaffoldDiscreteMEP(gym.Env):
         ax.plot(x, y, color=c, marker="o", markersize=5, linestyle="None")
 
     def _plot_state_history(self, ax, state_history):
+        from rlmep.utils.colored_line import colored_line
+
         if state_history is None:
             pass
         else:
@@ -316,13 +335,23 @@ class ScaffoldDiscreteMEP(gym.Env):
 
 
 def _get_cheat_functions():
-    def check_terminal(state: list[int, int], terminal_state: list[int, int]) -> bool:
+    """
+    Provide solution functions for the discrete MEP environment.
+    """
+
+    def check_terminal(state: list[int, int], terminal_state: list[int, int], history: list[float], delta_max: float) -> bool:
         """
         Check if the state is terminal.
         """
-        # Your code here
-        terminal = state == terminal_state
+        terminal = False
+
+        if state == terminal_state:
+            terminal = True
+        elif len(history) > 0 and np.max(history) > delta_max:
+            terminal = True
+        
         return terminal
+
 
     def check_truncated(step: int, max_steps: int) -> bool:
         """
@@ -360,11 +389,20 @@ def _get_cheat_functions():
         config.positions[move_index, :] = grid_spec.ij_to_xyz(*state)
 
         return atoms
+    
+    def get_distance_reward(current_distance: float, previous_distance: float, distance_parameter: float) -> float:
+        if  current_distance < previous_distance:
+            reward = distance_parameter
+        elif current_distance > previous_distance:
+            reward = -distance_parameter
+        else:
+            reward = 0.0
+        
+        return reward
 
-    def reward_function(
+    def get_final_reward(
         delta_energies: list[float], A: float, delta_max: float
     ) -> float:
-        # Your code here
         barrier = np.min([np.max(delta_energies), delta_max])
         reward = A * (1 - barrier / delta_max)
         return reward
@@ -374,68 +412,6 @@ def _get_cheat_functions():
         "check_truncated": check_truncated,
         "update_state": update_state,
         "update_atoms": update_atoms,
-        "reward_function": reward_function,
+        "get_distance_reward": get_distance_reward,
+        "get_final_reward": get_final_reward,
     }
-
-
-
-def colored_line(x, y, c, ax, **lc_kwargs):
-    from matplotlib.collections import LineCollection
-
-    """
-    Plot a line with a color specified along the line by a third value.
-
-    It does this by creating a collection of line segments. Each line segment is
-    made up of two straight lines each connecting the current (x, y) point to the
-    midpoints of the lines connecting the current point with its two neighbors.
-    This creates a smooth line with no gaps between the line segments.
-
-    Parameters
-    ----------
-    x, y : array-like
-        The horizontal and vertical coordinates of the data points.
-    c : array-like
-        The color values, which should be the same size as x and y.
-    ax : Axes
-        Axis object on which to plot the colored line.
-    **lc_kwargs
-        Any additional arguments to pass to matplotlib.collections.LineCollection
-        constructor. This should not include the array keyword argument because
-        that is set to the color argument. If provided, it will be overridden.
-
-    Returns
-    -------
-    matplotlib.collections.LineCollection
-        The generated line collection representing the colored line.
-    """
-    if "array" in lc_kwargs:
-        warnings.warn('The provided "array" keyword argument will be overridden')
-
-    # Default the capstyle to butt so that the line segments smoothly line up
-    default_kwargs = {"capstyle": "butt"}
-    default_kwargs.update(lc_kwargs)
-
-    # Compute the midpoints of the line segments. Include the first and last points
-    # twice so we don't need any special syntax later to handle them.
-    x = np.asarray(x)
-    y = np.asarray(y)
-    x_midpts = np.hstack((x[0], 0.5 * (x[1:] + x[:-1]), x[-1]))
-    y_midpts = np.hstack((y[0], 0.5 * (y[1:] + y[:-1]), y[-1]))
-
-    # Determine the start, middle, and end coordinate pair of each line segment.
-    # Use the reshape to add an extra dimension so each pair of points is in its
-    # own list. Then concatenate them to create:
-    # [
-    #   [(x1_start, y1_start), (x1_mid, y1_mid), (x1_end, y1_end)],
-    #   [(x2_start, y2_start), (x2_mid, y2_mid), (x2_end, y2_end)],
-    #   ...
-    # ]
-    coord_start = np.column_stack((x_midpts[:-1], y_midpts[:-1]))[:, np.newaxis, :]
-    coord_mid = np.column_stack((x, y))[:, np.newaxis, :]
-    coord_end = np.column_stack((x_midpts[1:], y_midpts[1:]))[:, np.newaxis, :]
-    segments = np.concatenate((coord_start, coord_mid, coord_end), axis=1)
-
-    lc = LineCollection(segments, **default_kwargs)
-    lc.set_array(c)  # set the colors of each segment
-
-    return ax.add_collection(lc)

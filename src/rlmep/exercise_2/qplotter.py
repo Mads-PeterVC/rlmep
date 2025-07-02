@@ -7,7 +7,7 @@ class QPlotter:
     A class to plot the Q-values for a discrete MEP environment.
     """
 
-    def plot(self, ax, Q, env):
+    def plot(self, ax, Q, env, alpha=1.0):
         X, Y = env.gridspec.get_grid()
         gs = env.gridspec.grid_spacing
 
@@ -23,7 +23,7 @@ class QPlotter:
 
                 for action_index, method in enumerate(self.get_methods()):
                     xp, yp, to = method(x, y, gs)
-                    ax.fill(xp, yp, facecolor=colorizer.to_rgba(Q[i, j, action_index]), alpha=1, edgecolor='black')
+                    ax.fill(xp, yp, facecolor=colorizer.to_rgba(Q[i, j, action_index]), alpha=alpha, edgecolor='black')
 
                     ax.text(x+to[0], y+to[1], f"{Q[i, j, action_index]:0.2f}", fontsize=6, va='center', ha='center')
 
@@ -55,7 +55,7 @@ class QPlotter:
         return [self.get_right, self.get_left, self.get_up, self.get_down]
 
 
-def plot_qvalues(ax, Q, env):
+def plot_qvalues(ax, Q, env, alpha=1.0):
     """
     Plots the Q-values for a discrete MEP environment.
 
@@ -71,6 +71,6 @@ def plot_qvalues(ax, Q, env):
         fig, ax = plt.subplots(figsize=(10, 10))
 
     plotter = QPlotter()
-    plotter.plot(ax, Q, env)
+    plotter.plot(ax, Q, env, alpha=alpha)
 
     return ax
