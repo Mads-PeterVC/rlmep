@@ -1,8 +1,8 @@
 import torch
 import numpy as np
-from copy import deepcopy
 
-class ExperienceReplay: 
+
+class ExperienceReplay:
     """
     Simple experience replay buffer for storing relevant properties for a DQN search.
     """
@@ -28,15 +28,15 @@ class ExperienceReplay:
 
     def get_batch(self):
         """
-        Returns        
+        Returns
         states, actions, rewards, next_states, terminal
         """
         indices = np.random.randint(0, self.current_size, size=self.batch_size)
         return self.states[indices], self.actions[indices], self.rewards[indices], self.new_states[indices], self.terminal[indices]
-    
+
     def clear(self):
-        self.states = torch.tensor(np.zeros((self.size, self.obs_dim)), dtype=torch.float32) # YOUR CODE HERE
-        self.new_states = torch.tensor(np.zeros((self.size, self.obs_dim)), dtype=torch.float32) # YOUR CODE HERE
+        self.states = torch.tensor(np.zeros((self.size, self.obs_dim)), dtype=torch.float32)
+        self.new_states = torch.tensor(np.zeros((self.size, self.obs_dim)), dtype=torch.float32)
         self.rewards = torch.tensor(np.zeros(self.size), dtype=torch.float32)
         self.actions = torch.tensor(np.zeros(self.size), dtype=torch.int32)
         self.terminal = torch.tensor(np.zeros(self.size), dtype=torch.bool)
