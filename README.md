@@ -1,4 +1,4 @@
-# Exploring reinforcement learning in materials science
+# Exploring reinforcement learning ~~in~~ for materials science
 
 | Subject | File | Colab |
 | --------  | ---- | ------ |
